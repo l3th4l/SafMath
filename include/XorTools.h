@@ -1,0 +1,14 @@
+#ifndef XOR_TOOLS_H
+#define XOR_TOOLS_H
+
+#include <string>
+#include <bitset>
+#include <vector>
+
+std::string xorBinaryStrings(const std::string& bin1, const std::string& bin2);
+std::string xorChunksWithSingleKey(const std::string& binary, const std::string& key, size_t chunkSize);
+std::string xorChunksWithMultipleKeys(const std::string& binary, const std::vector<std::string>& keys, size_t chunkSize, bool repeatKeys);
+std::string frequencyAnalysis(const std::string& binary);
+std::string decryptWithKnownPlaintext(const std::string& binary, const std::string& knownPlaintext);
+
+#endif // XOR_TOOLS_H
