@@ -41,7 +41,7 @@ std::string xorChunksWithMultipleKeys(const std::string& binary, const std::vect
 
 // Letter frequency analysis for XOR cipher decryption, to assist in breaking simple XOR ciphers
 // by analyzing the frequency of letters in the resulting plaintext.
-std::string frequencyAnalysis(const std::string& binary) 
+DecryptionResult frequencyAnalysis(const std::string& binary) 
 {   
     // Letters and their frequencies in English text (approximate)
     std::string letters = "ETAOINSHRDLUCMWFGYPBVKJXQZ";
@@ -107,19 +107,36 @@ std::string frequencyAnalysis(const std::string& binary)
          // 1. Calculate Monogram distance 
         float monogramDistance = 0.0;
         for (size_t j = 0; j < 26; ++j) {
+
+            //ignore non-letter characters in the frequency analysis
             float decryptedRatio = (float)decryptedFrequency[j] / decryptedText.size();
+             // Use a weighted distance metric, giving more weight to more common letters 
+            // Use a weighted distance metric, giving more weight to more common letters
             monogramDistance += ((decryptedRatio - englishMonograms[j]) * (decryptedRatio - englishMonograms[j])) / englishMonograms[j];
         }
 
-        float distance = (monogramDistance * 0.4f);
+        // 2. Penalty/Reward System
+        float penalty = 0.0;
+        for (char c : decryptedText) {
+            // Reward spaces!
+            if (c == ' ') {
+                penalty -= 10.0; 
+            }
+            // Heavily penalize non-printable "garbage" characters
+            else if (!isprint(c) && !isspace(c)) {
+                penalty += 50.0;
+            }
+        }
+        
+        float distance = (monogramDistance * 0.4f) + penalty;
 
         if (key == 0 || distance < leastDistance) {
             leastDistance = distance;
             bestDecryptedText = decryptedText; // Store the decrypted text with the least distance
         }
     }
-
-    return bestDecryptedText; // Return the decrypted text with the least distance
+    // Return the struct initialized with both values
+    return {bestDecryptedText, leastDistance};
 };
 
 

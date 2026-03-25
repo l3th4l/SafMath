@@ -1,0 +1,19 @@
+# Variables for compiler and flags
+CXX = g++.exe
+CXXFLAGS = -g -Wall -Iinclude
+
+# List your source files here
+SRCS = Challenge_4.cc XorTools.cc NumberSystem.cc
+
+# Define the output executable name
+TARGET = Challenge_4.exe
+
+# The default 'recipe' that runs when you type 'make'
+all: $(TARGET)
+
+$(TARGET): $(SRCS)
+	$(CXX) $(CXXFLAGS) $(SRCS) -o $(TARGET)
+
+# A 'clean' rule to delete the executable and start fresh
+clean:
+	del $(TARGET)

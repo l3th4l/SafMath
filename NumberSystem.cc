@@ -64,3 +64,22 @@ std::string base64ToBinary(const std::string& base64) {
 
     return "Not implemented yet";
 }
+
+std::string plainTextToBinaryString(const std::string& plainText) {
+    std::string binary = "";
+    for (unsigned char c : plainText) {
+        binary += std::bitset<8>(c).to_string();
+    }
+    return binary;
+}
+
+std::string binaryStringToPlainText(const std::string& binaryString) {
+    // Convert decryptedBinary to text (assuming ASCII)
+    std::string plainText = "";
+    for (size_t i = 0; i < binaryString.size(); i += 8) {
+        std::string byte = binaryString.substr(i, 8);
+        char character = static_cast<char>(std::bitset<8>(byte).to_ulong());
+        plainText += character;
+    }
+    return plainText; 
+}
