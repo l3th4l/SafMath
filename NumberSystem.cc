@@ -24,7 +24,7 @@ std::string hexStringToBinary(const std::string& hex) {
 }
 
 std::string binaryToHexString(const std::string& binary) {
-    const std::string hexChars = "0123456789ABCDEF";
+    const std::string hexChars = "0123456789abcdef";
     std::string hexResult = "";
 
     // Process 4 bits at a time 

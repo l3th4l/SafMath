@@ -21,16 +21,21 @@ std::string xorChunksWithSingleKey(const std::string& binary, const std::string&
     return result;
 };
 
-std::string xorChunksWithMultipleKeys(const std::string& binary, const std::vector<std::string>& keys, size_t chunkSize, bool repeatKeys) {
+std::string xorChunksWithMultipleKeys(const std::string& binary, const std::string& keys, size_t chunkSize, bool repeatKeys) {
     std::string result = "";
     size_t keyIndex = 0;
     for (size_t i = 0; i < binary.size(); i += chunkSize) {
         std::string chunk = binary.substr(i, chunkSize);
-        result += xorBinaryStrings(chunk, keys[keyIndex]);
+
+        // get the chunk of key from the big string of keys 
+        std::string keyChunk = keys.substr(keyIndex, chunkSize);
+
+        result += xorBinaryStrings(chunk, keyChunk);
+
         if (repeatKeys) {
-            keyIndex = (keyIndex + 1) % keys.size(); // Move to the next key and wrap around if needed
+            keyIndex = (keyIndex + chunkSize) % keys.size(); // Move to the next key and wrap around if needed
         } else {
-            keyIndex++; // Move to the next key without wrapping
+            keyIndex += chunkSize; // Move to the next key without wrapping
             if (keyIndex >= keys.size()) {
                 break; // Stop if we run out of keys
             }
