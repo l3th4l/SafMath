@@ -58,11 +58,28 @@ std::string binaryToBase64(const std::string& binary) {
 }
 
 std::string base64ToBinary(const std::string& base64) {
+    const std::string base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string binaryResult = "";
 
-    // Throw a not implemented error for now, as this function is not fully implemented yet
-    // You can implement the actual conversion logic later, but for now, it will just return
+    for (char c : base64) {
+        // Skip padding characters
+        if (c == '=') continue;
 
-    return "Not implemented yet";
+        // Find the index of the character in the Base64 alphabet
+        size_t index = base64Chars.find(c);
+        
+        if (index == std::string::npos) {
+            // This handles cases where there might be newlines or spaces in the file
+            continue; 
+        }
+
+        // Convert the index (0-63) to a 6-bit binary string
+        // We use bitset<6> to ensure it's exactly 6 bits long
+        std::bitset<6> bits(index);
+        binaryResult += bits.to_string();
+    }
+
+    return binaryResult;
 }
 
 std::string plainTextToBinaryString(const std::string& plainText) {
