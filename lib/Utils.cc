@@ -3,6 +3,8 @@
 #include "include/Utils.h"
 
 #include <fstream>
+#include <vector>
+#include <string>
 
 float HammingDistanceBinaryString(const std::string& string1, const std::string& string2, bool normalized = false){
     std::string differing_bits = xorBinaryStrings(string1, string2);
@@ -47,8 +49,6 @@ std::vector<std::string> transposedBlocksFromString(const std::string& inputStri
     return groups;
 };
 
-#include <vector>
-#include <string>
 
 std::string stringFromTransposedBlocks(const std::vector<std::string>& groups, size_t blockSize) {
     if (groups.empty() || groups[0].empty()) return "";

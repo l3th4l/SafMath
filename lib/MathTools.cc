@@ -1,79 +1,79 @@
 #include <iostream>
 #include <vector>
 
-#include <vector>
-#include <iostream>
+#include "include/MathTools.h"
+#include "include/NumberSystems.h"
+#include "include/XorTools.h"
 
-class Polynomial {
+#include <string>
+#include <stdexcept>
+#include <algorithm>
 
-    public:
+BinaryPolynomial addBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
+
+    std::string coeffs1 = p1.getCoefficients();
+    std::string coeffs2 = p2.getCoefficients();
+
+    // Pad the shorter one with leading zeros
+    if (coeffs1.length() < coeffs2.length()) {
+        coeffs1 = std::string(coeffs2.length() - coeffs1.length(), '0') + coeffs1;
+    } else if (coeffs2.length() < coeffs1.length()) {
+        coeffs2 = std::string(coeffs1.length() - coeffs2.length(), '0') + coeffs2;
+    }
+
+    return xorBinaryStrings(coeffs1, coeffs2);
     
-        int degree;
-        std::vector<int> coefficients;
-
-        // Constructor: Initializes the degree and the vector size
-        Polynomial(int deg) : degree(deg), coefficients(deg + 1, 0) {}
-
-        // Setter: Logic can be added here to validate input
-        void setCoefficient(int power, int value) {
-            if (power >= 0 && power <= degree) {
-                coefficients[power] = value;
-            }
-        }
-
-        // Getter: Access data safely
-        int getCoefficient(int power) const {
-            if (power >= 0 && power <= degree) {
-                return coefficients[power];
-            }
-            return 0;
-        }
-
-        int getDegree() const {
-            return degree;
-        }
-
-        // A helper method to print the polynomial nicely
-        void display() const {
-            for (int i = degree; i >= 0; --i) {
-                std::cout << coefficients[i] << "x^" << i << (i > 0 ? " + " : "");
-            }
-            std::cout << std::endl;
-        }
-};
-
-Polynomial addPolynomials(const Polynomial& p1, const Polynomial& p2, const int Modulo){
-    Polynomial result(std::max(p1.degree, p2.degree));
-    result.degree = std::max(p1.degree, p2.degree);
-    result.coefficients.resize(result.degree + 1, 0);
-
-    for (int i = 0; i <= result.degree; ++i) {
-        int coeff1 = (i <= p1.degree) ? p1.coefficients[i] : 0;
-        int coeff2 = (i <= p2.degree) ? p2.coefficients[i] : 0;
-        result.coefficients[i] = (coeff1 + coeff2) % Modulo;
-    }
-
-    return result;
-}
-// Polynomial Modulo 
-
-// Polynomial Multiplication 
-Polynomial multiplyPolynomialsModulo(const Polynomial& p1, const Polynomial& p2, const Polynomial irreduciblePolynomial, const int Modulo) {
-    Polynomial result(irreduciblePolynomial.degree); 
-    Polynomial tempPoly(p1.degree + p2.degree); // Temporary polynomial to hold the multiplication result
-
-    for (int i = 0; i <= p1.degree; i++){
-        for (int j = 0; j <= p2.degree; j++){
-            tempPoly.coefficients[j + i] = (p1.coefficients[i] * p2.coefficients[j]) % Modulo;
-        }
-    }
-
-    // Now we need to reduce tempPoly modulo the irreducible polynomial
-    return tempPoly; // Placeholder, the actual reduction logic needs to be implemented
 }
 
-// Polynomial Division 
+std::vector<BinaryPolynomial> divideBinaryPolynomials(const BinaryPolynomial& dividend, const BinaryPolynomial& divisor)
+{
+    std::string divisor_coeffs = divisor.getCoefficients();
+    std::string dividend_coeffs = dividend.getCoefficients();
 
-// Polynomial GCD (Euclidean Algorithm) 
+    // Initialize quotient with as many zeros as the degree difference (max possible degree of quotient)
+    int max_quotient_degree = dividend.getDegree() - divisor.getDegree();
+    std::string quotient_coeffs = std::string(max_quotient_degree + 1, '0');
 
-// PolynomialInverse (Extended Euclidean Algorithm)
+    std::cout << "Initial quotient coefficients: " << quotient_coeffs << std::endl;
+
+    BinaryPolynomial quotient("0"); // Start with zero, will update coefficients later
+
+    BinaryPolynomial remainder(dividend_coeffs);
+
+    if (divisor.getDegree() == 0 && divisor.getCoefficients() == "0") {
+        throw std::invalid_argument("Division by zero polynomial is not allowed.");
+    }else if (divisor.getDegree() > dividend.getDegree())
+    {
+        // Quotient is zero, remainder is dividend
+        quotient.setCoefficients("0");
+        return {quotient, remainder};
+    }else if (divisor.getDegree() == 0 && divisor.getCoefficients() == "1")
+    {
+        quotient.setCoefficients(dividend_coeffs);
+        return {quotient, BinaryPolynomial("0")};
+    }
+    
+    
+    while (remainder.getDegree() >= divisor.getDegree())
+    {
+        int degree_diff = remainder.getDegree() - divisor.getDegree();
+
+        // set the term at index degree_diff in the quotient to 1
+        // step 1. set the bit at degree_diff to '1'
+        quotient_coeffs[quotient_coeffs.size() - 1 - degree_diff] = '1';
+
+        std::cout << "Current Quotient Coefficients: " << quotient_coeffs << std::endl;
+
+        
+        // Create the term to subtract (which is divisor shifted left by degree_diff)
+        std::string term_coeffs = divisor_coeffs + std::string(degree_diff, '0');
+        BinaryPolynomial term(term_coeffs);
+        remainder.setCoefficients(xorBinaryStrings(remainder.getCoefficients(), term.getCoefficients()));
+    }
+
+    // step 2. update the quotient with the new coefficients
+    quotient.setCoefficients(quotient_coeffs);
+
+    return {quotient, remainder};
+    
+}
