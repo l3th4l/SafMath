@@ -105,3 +105,19 @@ BinaryPolynomial multiplyBinaryPolynomials(const BinaryPolynomial& p1, const Bin
     std::vector<BinaryPolynomial> division_result = divideBinaryPolynomials(product, modulus);
     return division_result[1]; // Return the remainder as the result of multiplication modulo the modulus
 }
+
+/// GCD of two binary polynomials using the Euclidean algorithm
+BinaryPolynomial GCD(const BinaryPolynomial& p1, const BinaryPolynomial& p2){
+    BinaryPolynomial a = p1; 
+    BinaryPolynomial b = p2;
+
+    do
+    {
+        BinaryPolynomial temp = b;
+        temp = divideBinaryPolynomials(a, b)[1]; // Get the remainder of a divided by b
+        a = b; // Update a to b
+        b = temp; // Update b to the remainder
+    } while (b.getDegree() >= 0 && b.getCoefficients() != "0");
+
+    return a; // The last non-zero remainder is the GCD
+}
