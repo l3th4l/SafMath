@@ -25,6 +25,17 @@ BinaryPolynomial addBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPo
     
 }
 
+// Addition wrapper
+BinaryPolynomial operator+(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
+    return addBinaryPolynomials(p1, p2);
+}
+
+// Subtraction wrapper
+BinaryPolynomial operator-(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
+    // In GF(2), addition and subtraction are both XOR
+    return addBinaryPolynomials(p1, p2);
+}
+
 std::vector<BinaryPolynomial> divideBinaryPolynomials(const BinaryPolynomial& dividend, const BinaryPolynomial& divisor)
 {
     std::string divisor_coeffs = divisor.getCoefficients();
@@ -77,6 +88,11 @@ std::vector<BinaryPolynomial> divideBinaryPolynomials(const BinaryPolynomial& di
     
 }
 
+// Division wrapper
+std::vector<BinaryPolynomial> operator/(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
+    return divideBinaryPolynomials(p1, p2);
+}
+
 BinaryPolynomial multiplyBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
     std::string coeffs1 = p1.getCoefficients();
     std::string coeffs2 = p2.getCoefficients();
@@ -100,6 +116,11 @@ BinaryPolynomial multiplyBinaryPolynomials(const BinaryPolynomial& p1, const Bin
     return BinaryPolynomial(product_coeffs);
 }
 
+// Multiplication wrapper
+BinaryPolynomial operator*(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
+    return multiplyBinaryPolynomials(p1, p2);
+}
+
 BinaryPolynomial multiplyBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2, const BinaryPolynomial& modulus) {
     BinaryPolynomial product = multiplyBinaryPolynomials(p1, p2);
     std::vector<BinaryPolynomial> division_result = divideBinaryPolynomials(product, modulus);
@@ -120,4 +141,29 @@ BinaryPolynomial GCD(const BinaryPolynomial& p1, const BinaryPolynomial& p2){
     } while (b.getDegree() >= 0 && b.getCoefficients() != "0");
 
     return a; // The last non-zero remainder is the GCD
+}
+
+std::vector<BinaryPolynomial> extendedGCD(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
+    BinaryPolynomial r0 = p1, r1 = p2;
+    BinaryPolynomial s0("1"), s1("0");
+    BinaryPolynomial t0("0"), t1("1");
+
+    do
+    {
+        BinaryPolynomial temp_r = (r0 / r1)[1]; // Get the remainder of r0 divided by r1
+        BinaryPolynomial temp_q = ((r0 - temp_r) / r1)[0]; // Get the quotient of r0 divided by r1
+
+        BinaryPolynomial temp_s = s0 - temp_q * s1; // Update s
+        BinaryPolynomial temp_t = t0 - temp_q * t1; // Update t
+
+        r0 = r1;
+        r1 = temp_r;
+        s0 = s1;
+        s1 = temp_s;
+        t0 = t1;
+        t1 = temp_t;
+
+    } while (r1.getDegree() >= 0 && r1.getCoefficients() != "0");
+
+    return {r0, s0, t0}; // GCD, x coefficient, y coefficient
 }

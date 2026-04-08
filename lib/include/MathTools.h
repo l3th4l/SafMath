@@ -54,14 +54,26 @@ public:
         }
         return result;
     }
+
+    // Friend declarations to allow access to m_coefficients
+    friend BinaryPolynomial operator+(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
+    friend BinaryPolynomial operator-(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
+    friend BinaryPolynomial operator*(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
+    friend std::vector<BinaryPolynomial> operator/(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
 };
 
 BinaryPolynomial addBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
 std::vector<BinaryPolynomial> divideBinaryPolynomials(const BinaryPolynomial& dividend, const BinaryPolynomial& divisor);
 
+// Prototypes for the operators
+BinaryPolynomial operator+(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
+BinaryPolynomial operator-(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
+BinaryPolynomial operator*(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
+std::vector<BinaryPolynomial> operator/(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
+
 BinaryPolynomial multiplyBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
 BinaryPolynomial multiplyBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2, const BinaryPolynomial& modulus);
 
 BinaryPolynomial GCD(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
-
+std::vector<BinaryPolynomial> extendedGCD(const BinaryPolynomial& p1, const BinaryPolynomial& p2);
 #endif // MATHTOOLS_H
