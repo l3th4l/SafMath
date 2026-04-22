@@ -269,7 +269,6 @@ BinaryPolynomial affineTransform(const BinaryPolynomial& poly) {
 
         // XOR the resulting bit with the corresponding bit in the constant to get the final bit for the output polynomial
         intermediateCoeffs[i] = xorAll(andResult.getCoefficients());
-
     }
 
     return BinaryPolynomial(intermediateCoeffs) + constant; // Add the constant to get the final output polynomial
