@@ -12,8 +12,8 @@
 
 BinaryPolynomial addBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
 
-    std::string coeffs1 = p1.getCoefficients();
-    std::string coeffs2 = p2.getCoefficients();
+    std::string coeffs1 = p1.getCoefficients(8);
+    std::string coeffs2 = p2.getCoefficients(8);
 
     // Pad the shorter one with leading zeros
     if (coeffs1.length() < coeffs2.length()) {
@@ -39,8 +39,8 @@ BinaryPolynomial operator-(const BinaryPolynomial& p1, const BinaryPolynomial& p
 
 std::vector<BinaryPolynomial> divideBinaryPolynomials(const BinaryPolynomial& dividend, const BinaryPolynomial& divisor)
 {
-    std::string divisor_coeffs = divisor.getCoefficients();
-    std::string dividend_coeffs = dividend.getCoefficients();
+    std::string divisor_coeffs = divisor.getCoefficients(8);
+    std::string dividend_coeffs = dividend.getCoefficients(8);
 
     // Initialize quotient with as many zeros as the degree difference (max possible degree of quotient)
     int max_quotient_degree = dividend.getDegree() - divisor.getDegree();
@@ -52,14 +52,14 @@ std::vector<BinaryPolynomial> divideBinaryPolynomials(const BinaryPolynomial& di
 
     BinaryPolynomial remainder(dividend_coeffs);
 
-    if (divisor.getDegree() == 0 && divisor.getCoefficients() == "0") {
+    if (divisor.getDegree() == 0 && divisor.getCoefficients(8) == "0") {
         throw std::invalid_argument("Division by zero polynomial is not allowed.");
     }else if (divisor.getDegree() > dividend.getDegree())
     {
         // Quotient is zero, remainder is dividend
         quotient.setCoefficients("0");
         return {quotient, remainder};
-    }else if (divisor.getDegree() == 0 && divisor.getCoefficients() == "1")
+    }else if (divisor.getDegree() == 0 && divisor.getCoefficients(8) == "1")
     {
         quotient.setCoefficients(dividend_coeffs);
         return {quotient, BinaryPolynomial("0")};
@@ -79,7 +79,7 @@ std::vector<BinaryPolynomial> divideBinaryPolynomials(const BinaryPolynomial& di
         // Create the term to subtract (which is divisor shifted left by degree_diff)
         std::string term_coeffs = divisor_coeffs + std::string(degree_diff, '0');
         BinaryPolynomial term(term_coeffs);
-        remainder.setCoefficients(xorBinaryStrings(remainder.getCoefficients(), term.getCoefficients()));
+        remainder.setCoefficients(xorBinaryStrings(remainder.getCoefficients(8), term.getCoefficients(8)));
     }
 
     // step 2. update the quotient with the new coefficients
@@ -95,8 +95,8 @@ std::vector<BinaryPolynomial> operator/(const BinaryPolynomial& p1, const Binary
 }
 
 BinaryPolynomial multiplyBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
-    std::string coeffs1 = p1.getCoefficients();
-    std::string coeffs2 = p2.getCoefficients();
+    std::string coeffs1 = p1.getCoefficients(8);
+    std::string coeffs2 = p2.getCoefficients(8);
 
     // The degree of the product is at most the sum of the degrees
     int max_degree = p1.getDegree() + p2.getDegree();
@@ -134,8 +134,8 @@ BinaryPolynomial operator&(const BinaryPolynomial& p1, const BinaryPolynomial& p
 
 BinaryPolynomial andBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
     // Step 1: Perform bitwise AND on the coefficients
-    std::string coeffs1 = p1.getCoefficients();
-    std::string coeffs2 = p2.getCoefficients();
+    std::string coeffs1 = p1.getCoefficients(8);
+    std::string coeffs2 = p2.getCoefficients(8);
 
     // Pad the shorter one with leading zeros
     if (coeffs1.length() < coeffs2.length()) {
@@ -165,7 +165,7 @@ BinaryPolynomial GCD(const BinaryPolynomial& p1, const BinaryPolynomial& p2){
         temp = divideBinaryPolynomials(a, b)[1]; // Get the remainder of a divided by b
         a = b; // Update a to b
         b = temp; // Update b to the remainder
-    } while (b.getDegree() >= 0 && b.getCoefficients() != "0");
+    } while (b.getDegree() >= 0 && b.getCoefficients(8) != "0");
 
     return a; // The last non-zero remainder is the GCD
 }
@@ -190,7 +190,7 @@ std::vector<BinaryPolynomial> extendedGCD(const BinaryPolynomial& p1, const Bina
         t0 = t1;
         t1 = temp_t;
 
-    } while (r1.getDegree() >= 0 && r1.getCoefficients() != "0");
+    } while (r1.getDegree() >= 0 && r1.getCoefficients(8) != "0");
 
     return {r0, s0, t0}; // GCD, x coefficient, y coefficient
 }
@@ -264,11 +264,16 @@ BinaryPolynomial affineTransform(const BinaryPolynomial& poly) {
     for (int i = 0; i < 8; i++) {
         // Rotate the polynomial to the right by 1 bit
         BinaryPolynomial rotated = shiftRight(affineCoeffs, i);
+
+        //std::cout << "Rotated Coefficients for bit " << i << ": " << rotated.getCoefficients(8) << std::endl;
+
         // take the bitwise AND of the rotated polynomial and XOR all of the elements of the result together to get a single bit
         BinaryPolynomial andResult = poly & rotated;
 
+        //std::cout << "AND Result for bit " << i << ": " << andResult.getCoefficients(8) << std::endl;
+
         // XOR the resulting bit with the corresponding bit in the constant to get the final bit for the output polynomial
-        intermediateCoeffs[i] = xorAll(andResult.getCoefficients());
+        intermediateCoeffs[i] = xorAll(andResult.getCoefficients(8));
     }
 
     return BinaryPolynomial(intermediateCoeffs) + constant; // Add the constant to get the final output polynomial
