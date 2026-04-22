@@ -83,3 +83,16 @@ std::string readFileToString(const std::string& filename) {
     file.close();
     return content;
 };
+
+std::string shiftRight(const std::string& input, int shiftAmount) {
+    if (input.empty()) return input; // Handle empty string case
+
+    int n = input.size();
+    // Normalize the shift amount to be within the bounds of the string length
+    int effectiveShift = ((shiftAmount % n) + n) % n;
+
+    if (effectiveShift == 0) return input; // No shift needed
+
+    // Perform the right shift using string slicing
+    return input.substr(n - effectiveShift) + input.substr(0, n - effectiveShift);
+}

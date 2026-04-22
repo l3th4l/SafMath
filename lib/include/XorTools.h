@@ -20,4 +20,6 @@ DecryptionResult frequencyAnalysis(const std::string& binary);
 
 std::string decryptWithKnownPlaintext(const std::string& binary, const std::string& knownPlaintext);
 
+char xorAll(const std::string& binaryStr);
+
 #endif // XOR_TOOLS_H

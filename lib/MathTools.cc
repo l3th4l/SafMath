@@ -4,6 +4,7 @@
 #include "include/MathTools.h"
 #include "include/NumberSystems.h"
 #include "include/XorTools.h"
+#include "include/Utils.h"
 
 #include <string>
 #include <stdexcept>
@@ -127,6 +128,32 @@ BinaryPolynomial multiplyBinaryPolynomials(const BinaryPolynomial& p1, const Bin
     return division_result[1]; // Return the remainder as the result of multiplication modulo the modulus
 }
 
+BinaryPolynomial operator&(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
+    return andBinaryPolynomials(p1, p2);
+}
+
+BinaryPolynomial andBinaryPolynomials(const BinaryPolynomial& p1, const BinaryPolynomial& p2) {
+    // Step 1: Perform bitwise AND on the coefficients
+    std::string coeffs1 = p1.getCoefficients();
+    std::string coeffs2 = p2.getCoefficients();
+
+    // Pad the shorter one with leading zeros
+    if (coeffs1.length() < coeffs2.length()) {
+        coeffs1 = std::string(coeffs2.length() - coeffs1.length(), '0') + coeffs1;
+    } else if (coeffs2.length() < coeffs1.length()) {
+        coeffs2 = std::string(coeffs1.length() - coeffs2.length(), '0') + coeffs2;
+    }
+
+    // Perform bitwise AND operation
+    std::string result_coeffs = "";
+    for (size_t i = 0; i < coeffs1.length(); ++i) {
+        result_coeffs += (coeffs1[i] == '1' && coeffs2[i] == '1') ? '1' : '0';
+    }
+
+    return BinaryPolynomial(result_coeffs);
+
+}
+
 /// GCD of two binary polynomials using the Euclidean algorithm
 BinaryPolynomial GCD(const BinaryPolynomial& p1, const BinaryPolynomial& p2){
     BinaryPolynomial a = p1; 
@@ -166,4 +193,89 @@ std::vector<BinaryPolynomial> extendedGCD(const BinaryPolynomial& p1, const Bina
     } while (r1.getDegree() >= 0 && r1.getCoefficients() != "0");
 
     return {r0, s0, t0}; // GCD, x coefficient, y coefficient
+}
+
+
+Matrix shiftRow(const Matrix& mat, int rowIndex, int shiftAmount) {
+    // 1. Get a copy of the data to work on
+    std::vector<std::vector<int>> data = mat.getData();
+    
+    // Safety check for valid row index
+    if (rowIndex < 0 || rowIndex >= mat.getRows()) {
+        return mat; 
+    }
+
+    std::vector<int>& row = data[rowIndex];
+    int n = row.size();
+
+    if (n == 0) return mat; // Avoid division by zero
+
+    // 2. Normalize the shift
+    // This handles negative shifts and shifts larger than the row size
+    int effectiveShift = ((shiftAmount % n) + n) % n;
+
+    if (effectiveShift != 0) {
+        // Using your rbegin() logic for a right shift:
+        std::rotate(row.rbegin(), row.rbegin() + effectiveShift, row.rend());
+    }
+
+    // 3. Return a new Matrix object with the updated data
+    return Matrix(data);
+}
+
+Matrix multiplyMatrices(const Matrix& mat1, const Matrix& mat2) {
+    // 1. Validate dimensions
+    // Columns of mat1 must equal Rows of mat2
+    if (mat1.getCols() != mat2.getRows()) {
+        throw std::invalid_argument("Matrix dimensions incompatible for multiplication.");
+    }
+
+    int rows = mat1.getRows();
+    int cols = mat2.getCols();
+    int inner = mat1.getCols(); // or mat2.getRows()
+
+    // 2. Create the resulting data structure (initialized to 0)
+    std::vector<std::vector<int>> resultData(rows, std::vector<int>(cols, 0));
+    
+    // Get copies of the data for easier access
+    std::vector<std::vector<int>> data1 = mat1.getData();
+    std::vector<std::vector<int>> data2 = mat2.getData();
+
+    // 3. Perform the multiplication (Triple nested loop)
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            for (int k = 0; k < inner; ++k) {
+                resultData[i][j] += data1[i][k] * data2[k][j];
+            }
+        }
+    }
+
+    // 4. Return a new Matrix with the calculated data
+    return Matrix(resultData);
+}
+
+BinaryPolynomial affineTransform(const BinaryPolynomial& poly) {
+    BinaryPolynomial constant("11000110"); // additive constant for the affine transformation
+
+    std::string affineCoeffs = "10001111"; 
+
+    std::string intermediateCoeffs = "00000000"; // Initialize with zeros
+
+    for (int i = 0; i < 8; i++) {
+        // Rotate the polynomial to the right by 1 bit
+        BinaryPolynomial rotated = shiftRight(affineCoeffs, i);
+        // take the bitwise AND of the rotated polynomial and XOR all of the elements of the result together to get a single bit
+        BinaryPolynomial andResult = poly & rotated;
+
+        // XOR the resulting bit with the corresponding bit in the constant to get the final bit for the output polynomial
+        intermediateCoeffs[i] = xorAll(andResult.getCoefficients());
+
+    }
+
+    return BinaryPolynomial(intermediateCoeffs) + constant; // Add the constant to get the final output polynomial
+}
+
+BinaryPolynomial inverseAffineTransform(const BinaryPolynomial& poly) {
+    // This is a placeholder implementation. You would need to implement the actual logic for the inverse affine transformation.
+    return poly; // Return the modified polynomial after the inverse affine transformation
 }

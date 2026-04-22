@@ -10,4 +10,5 @@ std::vector<std::string> transposedBlocksFromString(const std::string& inputStri
 std::string stringFromTransposedBlocks(const std::vector<std::string>& groups, size_t blockSize);
 
 std::string readFileToString(const std::string& filename);
+std::string shiftRight(const std::string& input, int shiftAmount);
 #endif

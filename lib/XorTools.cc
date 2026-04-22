@@ -172,3 +172,14 @@ std::string decryptWithKnownPlaintext(const std::string& binary, const std::stri
 
     return bestDecryptedText; // Return the best decrypted text if no exact match is found
 };
+
+char xorAll(const std::string& binaryStr) {
+    int result = 0;
+    for (char c : binaryStr) {
+        // Convert char to int and XOR
+        result ^= (c - '0');
+    }
+    
+    // Convert the integer 0 or 1 back to the string "0" or "1"
+    return (result == 0) ? '0' : '1';
+}
