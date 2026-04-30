@@ -1,12 +1,12 @@
 # Variables for compiler and flags
-CXX = g++.exe
+CXX = g++
 CXXFLAGS = -g -Wall -Iinclude
 
 # List your source files here
-SRCS = Challenge_4.cc XorTools.cc NumberSystem.cc
+SRCS = lib/MathTools.cc lib/XorTools.cc lib/NumberSystem.cc lib/Utils.cc lib/AES.cc 
 
-# Define the output executable name
-TARGET = Challenge_4.exe
+# Define the output executable name (Linux doesn't require .exe extensions)
+TARGET = aes_s_box_test 
 
 # The default 'recipe' that runs when you type 'make'
 all: $(TARGET)
@@ -16,4 +16,4 @@ $(TARGET): $(SRCS)
 
 # A 'clean' rule to delete the executable and start fresh
 clean:
-	del $(TARGET)
+	rm -f $(TARGET)

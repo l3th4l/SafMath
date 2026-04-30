@@ -175,13 +175,14 @@ std::vector<BinaryPolynomial> extendedGCD(const BinaryPolynomial& p1, const Bina
     BinaryPolynomial s0("1"), s1("0");
     BinaryPolynomial t0("0"), t1("1");
 
-    do
+    // Check condition BEFORE entering to avoid division by zero
+    while (r1.getDegree() >= 0 && r1.getCoefficients(8) != "00000000") 
     {
-        BinaryPolynomial temp_r = (r0 / r1)[1]; // Get the remainder of r0 divided by r1
-        BinaryPolynomial temp_q = ((r0 - temp_r) / r1)[0]; // Get the quotient of r0 divided by r1
+        BinaryPolynomial temp_r = (r0 / r1)[1]; 
+        BinaryPolynomial temp_q = ((r0 - temp_r) / r1)[0]; 
 
-        BinaryPolynomial temp_s = s0 - temp_q * s1; // Update s
-        BinaryPolynomial temp_t = t0 - temp_q * t1; // Update t
+        BinaryPolynomial temp_s = s0 - temp_q * s1; 
+        BinaryPolynomial temp_t = t0 - temp_q * t1; 
 
         r0 = r1;
         r1 = temp_r;
@@ -189,12 +190,10 @@ std::vector<BinaryPolynomial> extendedGCD(const BinaryPolynomial& p1, const Bina
         s1 = temp_s;
         t0 = t1;
         t1 = temp_t;
+    }
 
-    } while (r1.getDegree() >= 0 && r1.getCoefficients(8) != "0");
-
-    return {r0, s0, t0}; // GCD, x coefficient, y coefficient
+    return {r0, s0, t0}; 
 }
-
 
 Matrix shiftRow(const Matrix& mat, int rowIndex, int shiftAmount) {
     // 1. Get a copy of the data to work on
