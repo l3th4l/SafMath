@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H 
 
+#include "MathTools.h"
 #include <string>
 #include <vector>
 
@@ -11,4 +12,7 @@ std::string stringFromTransposedBlocks(const std::vector<std::string>& groups, s
 
 std::string readFileToString(const std::string& filename);
 std::string shiftRight(const std::string& input, int shiftAmount);
+
+Matrix AESMatrixFromBinaryString(const std::string& binaryString);
+
 #endif

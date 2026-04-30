@@ -198,14 +198,14 @@ std::vector<BinaryPolynomial> extendedGCD(const BinaryPolynomial& p1, const Bina
 
 Matrix shiftRow(const Matrix& mat, int rowIndex, int shiftAmount) {
     // 1. Get a copy of the data to work on
-    std::vector<std::vector<int>> data = mat.getData();
+    std::vector<std::vector<std::string>> data = mat.getData();
     
     // Safety check for valid row index
     if (rowIndex < 0 || rowIndex >= mat.getRows()) {
         return mat; 
     }
 
-    std::vector<int>& row = data[rowIndex];
+    std::vector<std::string>& row = data[rowIndex];
     int n = row.size();
 
     if (n == 0) return mat; // Avoid division by zero
@@ -221,37 +221,6 @@ Matrix shiftRow(const Matrix& mat, int rowIndex, int shiftAmount) {
 
     // 3. Return a new Matrix object with the updated data
     return Matrix(data);
-}
-
-Matrix multiplyMatrices(const Matrix& mat1, const Matrix& mat2) {
-    // 1. Validate dimensions
-    // Columns of mat1 must equal Rows of mat2
-    if (mat1.getCols() != mat2.getRows()) {
-        throw std::invalid_argument("Matrix dimensions incompatible for multiplication.");
-    }
-
-    int rows = mat1.getRows();
-    int cols = mat2.getCols();
-    int inner = mat1.getCols(); // or mat2.getRows()
-
-    // 2. Create the resulting data structure (initialized to 0)
-    std::vector<std::vector<int>> resultData(rows, std::vector<int>(cols, 0));
-    
-    // Get copies of the data for easier access
-    std::vector<std::vector<int>> data1 = mat1.getData();
-    std::vector<std::vector<int>> data2 = mat2.getData();
-
-    // 3. Perform the multiplication (Triple nested loop)
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            for (int k = 0; k < inner; ++k) {
-                resultData[i][j] += data1[i][k] * data2[k][j];
-            }
-        }
-    }
-
-    // 4. Return a new Matrix with the calculated data
-    return Matrix(resultData);
 }
 
 BinaryPolynomial affineTransform(const BinaryPolynomial& poly) {

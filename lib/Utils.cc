@@ -1,6 +1,7 @@
 #include "include/NumberSystems.h"
 #include "include/XorTools.h"
 #include "include/Utils.h"
+#include "include/MathTools.h"
 
 #include <fstream>
 #include <vector>
@@ -95,4 +96,17 @@ std::string shiftRight(const std::string& input, int shiftAmount) {
 
     // Perform the right shift using string slicing
     return input.substr(n - effectiveShift) + input.substr(0, n - effectiveShift);
-}
+};
+
+
+Matrix AESMatrixFromBinaryString(const std::string& binaryString){
+	std::vector<std::vector<std::string>> dataMatrix(4, std::vector<std::string>(4, "00000000"));
+
+	for (int i = 0; i < 4; i++){
+		for (int j = 0; j < 4; j++){
+			dataMatrix[j][i] = binaryString.substr(i * 32 + j * 8, 8);
+		}
+	}
+	
+	return Matrix(dataMatrix);
+};

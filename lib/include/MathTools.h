@@ -85,24 +85,24 @@ class Matrix {
 private:
     int m_rows;
     int m_cols;
-    std::vector<std::vector<int>> m_data;
+    std::vector<std::vector<std::string>> m_data;
 
 public:
     Matrix(int rows, int cols) : m_rows(rows), m_cols(cols) {
-        m_data.resize(rows, std::vector<int>(cols, 0));
+        m_data.resize(rows, std::vector<std::string>(cols, 0));
     }
 
     // New Constructor: Create a matrix from existing 2D vector
-    Matrix(const std::vector<std::vector<int>>& data) 
+    Matrix(const std::vector<std::vector<std::string>>& data) 
         : m_data(data), m_rows(data.size()), m_cols(data.empty() ? 0 : data[0].size()) {}
 
     // Getters
     int getRows() const { return m_rows; }
     int getCols() const { return m_cols; }
-    std::vector<std::vector<int>> getData() const { return m_data; }
+    std::vector<std::vector<std::string>> getData() const { return m_data; }
 
     // Setter to update the matrix data
-    void setData(const std::vector<std::vector<int>>& data) {
+    void setData(const std::vector<std::vector<std::string>>& data) {
         m_data = data;
         m_rows = data.size();
         m_cols = data.empty() ? 0 : data[0].size();
