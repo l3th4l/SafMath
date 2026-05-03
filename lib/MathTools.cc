@@ -222,6 +222,17 @@ Matrix shiftRow(const Matrix& mat, int rowIndex, int shiftAmount) {
     return Matrix(data);
 }
 
+Matrix shiftRows(const Matrix& mat, std::vector<int> shiftAmounts){
+	
+	Matrix shiftedMatrix = mat;
+
+	for (int i = 0; i < shiftAmounts.size(); i++){
+		shiftedMatrix = shiftRow(shiftedMatrix, i, shiftAmounts[i]); 
+	}
+
+	return shiftedMatrix;
+}
+
 BinaryPolynomial affineTransform(const BinaryPolynomial& poly) {
     BinaryPolynomial constant("11000110"); // additive constant for the affine transformation
 

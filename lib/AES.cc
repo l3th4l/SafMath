@@ -66,14 +66,28 @@ public:
 
                 // Add to the data matrix 
                 outputData[i][j] = affineTransform(AESInv).getCoefficients(8);
+		std::reverse(outputData[i][j].begin(), outputData[i][j].end());
 		std::cout << "resulting S-box value: " << outputData[i][j] << std::endl;
 
             }
-        }        
+        }
 
-        return Matrix(outputData); 
+	// 3. Shift Rows 
+	Matrix outputMatrix =  Matrix(outputData);
+	outputMatrix = shiftRows(outputMatrix, {0, 1, 2, 3, 4});
+
+	//4. Mix Columns 
+
+
+        return outputMatrix; 
     }
 };
+
+Matrix linearTransformMatrix(Matrix& inputMatrix){
+	for (int inputColumn = 0; inputColumn < inputMatrix.getCols(); inputColumn++){
+		
+	}
+}
 
 int main() {
 
@@ -85,6 +99,8 @@ int main() {
     
     // 2. Set the first byte to 1100 0010
     testData[0][0] = "11000010";
+    testData[1][0] = "11000010";
+
 
     // 3. Create the Matrix object
     Matrix initialMatrix(testData);
