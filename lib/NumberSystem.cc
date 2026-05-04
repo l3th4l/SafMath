@@ -1,5 +1,6 @@
 #include "include/NumberSystems.h"
-
+#include <string>
+#include <vector>	
 //Hex to Binary Conversion
 std::string hexCharsToBinary(char c) {
     switch (toupper(c)) {
@@ -21,6 +22,18 @@ std::string hexStringToBinary(const std::string& hex) {
         binaryResult += hexCharsToBinary(c);
     }
     return binaryResult;
+}
+std::vector<std::vector<std::string>> hex2DArrayToBinary2DArray(const std::vector<std::vector<std::string>>& input2DArray){
+	std::vector<std::vector<std::string>> output2DArray(input2DArray.size(), std::vector<std::string>(input2DArray[0].size(), ""));
+
+	for(int i = 0; i < input2DArray.size(); i++){
+		for(int j = 0; j < input2DArray[0].size(); j++){
+			output2DArray[i][j] = hexStringToBinary(input2DArray[i][j]);
+		}
+	}
+
+	return output2DArray;
+
 }
 
 std::string binaryToHexString(const std::string& binary) {

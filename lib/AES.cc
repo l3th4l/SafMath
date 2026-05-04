@@ -77,16 +77,51 @@ public:
 	outputMatrix = shiftRows(outputMatrix, {0, 1, 2, 3, 4});
 
 	//4. Mix Columns 
+	
+	
 
 
         return outputMatrix; 
     }
 };
 
-Matrix linearTransformMatrix(Matrix& inputMatrix){
+
+
+Matrix linearTransformMatrix(Matrix& inputMatrix, Matrix& transformationMatrix){
+
+	std::vector<std::vector<std::string>> inputMatrixData = inputMatrix.getData();
+	std::vector<std::vector<std::string>> outputMatrixData; 
+
 	for (int inputColumn = 0; inputColumn < inputMatrix.getCols(); inputColumn++){
+
+		//first get all elements of the row 
+		std::vector<BinaryPolynomial> columnVector;
+		std::vector<BinaryPolynomial> outputColumnVector(transformationMatrix.getRows(), BinaryPolynomial("0"));
+
+		for(int inputRow = 0; inputRow < inputMatrix.getRows(); inputRow++){
+			columnVector.emplace_back(inputMatrixData[inputRow][inputColumn]); 
+		}
+
+		//perform the linear transformation with the transformation matrix 
+		for(int transRow = 0; transRow < transformationMatrix.getRows(); transRow++)
+		{
+			for(int transColumn = 0; transColumn < transformationMatrix.getCols(); transColumn++)
+			{
+				outputColumnVector[transRow] =  outputColumnVector[transRow] + transformationMatrix.getData()[transRow][transColumn] * columnVector[transColumn];
+			} 
+		}
+
+		//convert polynomial vector to string vector 
+		std::vector<std::string> outputStringVector; 
+		for(int i =0; i < outputColumnVector.size(); i++){
+			outputStringVector.push_back(outputColumnVector[i].getCoefficients(8));
+		}
+
+		//
+		outputMatrixData.push_back(outputStringVector); 
 		
 	}
+	return Matrix(outputMatrixData); 
 }
 
 int main() {
