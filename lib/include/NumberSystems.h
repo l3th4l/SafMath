@@ -6,10 +6,12 @@
 #include <iostream>
 #include <string>
 #include <algorithm> // for transform
+#include <vector>
 
 //Hex to Binary Conversion
 std::string hexCharsToBinary(char c);
 std::string hexStringToBinary(const std::string& hex);
+std::vector<std::vector<std::string>> hex2DArrayToBinary2DArray(const std::vector<std::vector<std::string>>& input2DArray);
 std::string binaryToHexString(const std::string& binary);
 
 //Binary to Base64 Conversion

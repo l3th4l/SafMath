@@ -1,6 +1,7 @@
 #include "include/AES.h"
 
 #include "include/MathTools.h"
+#include "include/NumberSystems.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -77,52 +78,26 @@ public:
 	outputMatrix = shiftRows(outputMatrix, {0, 1, 2, 3, 4});
 
 	//4. Mix Columns 
-	
-	
+	std::vector<std::vector<std::string>> transformationMatrixData = 
+	{ 
+		{"02", "03", "01", "01"}, 
+		{"01", "02", "03", "01"}, 
+		{"01", "01", "02", "03"}, 
+		{"03", "01", "01", "02"}, 
+	};
 
+	transformationMatrixData = hex2DArrayToBinary2DArray(transformationMatrixData);
+
+	Matrix transformationMatrix = Matrix(transformationMatrixData);
+	
+	outputMatrix = linearTransformMatrix(outputMatrix, transformationMatrix);
+
+	//5. Key Addition Layer 
+	//TODO Implement this 
 
         return outputMatrix; 
     }
 };
-
-
-
-Matrix linearTransformMatrix(Matrix& inputMatrix, Matrix& transformationMatrix){
-
-	std::vector<std::vector<std::string>> inputMatrixData = inputMatrix.getData();
-	std::vector<std::vector<std::string>> outputMatrixData; 
-
-	for (int inputColumn = 0; inputColumn < inputMatrix.getCols(); inputColumn++){
-
-		//first get all elements of the row 
-		std::vector<BinaryPolynomial> columnVector;
-		std::vector<BinaryPolynomial> outputColumnVector(transformationMatrix.getRows(), BinaryPolynomial("0"));
-
-		for(int inputRow = 0; inputRow < inputMatrix.getRows(); inputRow++){
-			columnVector.emplace_back(inputMatrixData[inputRow][inputColumn]); 
-		}
-
-		//perform the linear transformation with the transformation matrix 
-		for(int transRow = 0; transRow < transformationMatrix.getRows(); transRow++)
-		{
-			for(int transColumn = 0; transColumn < transformationMatrix.getCols(); transColumn++)
-			{
-				outputColumnVector[transRow] =  outputColumnVector[transRow] + transformationMatrix.getData()[transRow][transColumn] * columnVector[transColumn];
-			} 
-		}
-
-		//convert polynomial vector to string vector 
-		std::vector<std::string> outputStringVector; 
-		for(int i =0; i < outputColumnVector.size(); i++){
-			outputStringVector.push_back(outputColumnVector[i].getCoefficients(8));
-		}
-
-		//
-		outputMatrixData.push_back(outputStringVector); 
-		
-	}
-	return Matrix(outputMatrixData); 
-}
 
 int main() {
 
@@ -130,7 +105,7 @@ int main() {
     //
     std::cout << "What is happening?" << std::endl;
     // 1. Prepare the 4x4 data (all 0s)
-    std::vector<std::vector<std::string>> testData(4, std::vector<std::string>(4, "00000000"));
+    std::vector<std::vector<std::string>> testData(4, std::vector<std::string>(4, "11000010"));
     
     // 2. Set the first byte to 1100 0010
     testData[0][0] = "11000010";

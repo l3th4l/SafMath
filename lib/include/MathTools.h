@@ -113,5 +113,6 @@ Matrix shiftRow(const Matrix& mat, int rowIndex, int shiftAmount);
 Matrix shiftRows(const Matrix& mat, std::vector<int> shiftAmounts);
 //Matrix multiplyMatrices(const Matrix& mat1, const Matrix& mat2);
 BinaryPolynomial affineTransform(const BinaryPolynomial& poly);
+Matrix linearTransformMatrix(Matrix& inputMatrix, Matrix& transformationMatrix);
 
 #endif // MATHTOOLS_H
