@@ -139,6 +139,8 @@ Matrix keyScheduleStep(Matrix& key, BinaryPolynomial& AESPolynomial, BinaryPolyn
 
 }
 
+//TODO Add a function to calculate the RoundKeys 
+
 int main() {
 
 	
