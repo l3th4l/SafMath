@@ -42,6 +42,11 @@ std::vector<BinaryPolynomial> divideBinaryPolynomials(const BinaryPolynomial& di
     std::string divisor_coeffs = divisor.getCoefficients(8);
     std::string dividend_coeffs = dividend.getCoefficients(8);
 
+    // Edge case: If dividend degree is less than divisor degree
+    if (dividend.getDegree() < divisor.getDegree()) {
+        return { BinaryPolynomial("0"), dividend }; // Quotient is 0, Remainder is dividend
+    }
+
     // Initialize quotient with as many zeros as the degree difference (max possible degree of quotient)
     int max_quotient_degree = dividend.getDegree() - divisor.getDegree();
     std::string quotient_coeffs = std::string(max_quotient_degree + 1, '0');
@@ -263,7 +268,7 @@ BinaryPolynomial inverseAffineTransform(const BinaryPolynomial& poly) {
     return poly; // Return the modified polynomial after the inverse affine transformation
 }
 
-Matrix linearTransformMatrix(Matrix& inputMatrix, Matrix& transformationMatrix){
+Matrix linearTransformMatrix(Matrix& inputMatrix, Matrix& transformationMatrix, BinaryPolynomial& modulo){
 
 	std::vector<std::vector<std::string>> inputMatrixData = inputMatrix.getData();
 	std::vector<std::vector<std::string>> outputMatrixData; 
@@ -283,7 +288,10 @@ Matrix linearTransformMatrix(Matrix& inputMatrix, Matrix& transformationMatrix){
 		{
 			for(int transColumn = 0; transColumn < transformationMatrix.getCols(); transColumn++)
 			{
-				outputColumnVector[transRow] =  outputColumnVector[transRow] + transformationMatrix.getData()[transRow][transColumn] * columnVector[transColumn];
+				BinaryPolynomial elementProduct = multiplyBinaryPolynomials(transformationMatrix.getData()[transRow][transColumn], columnVector[transColumn], modulo);
+				//std::cout << transformationMatrix.getData()[transRow][transColumn] << " x " << columnVector[transColumn].getCoefficients(8) << " : " << elementProduct.getCoefficients(8) << std::endl; 
+				outputColumnVector[transRow] =  outputColumnVector[transRow] + elementProduct;
+				//std::cout << "Output vector update : " << outputColumnVector[transRow].getCoefficients(8) << std::endl;
 			} 
 		}
 
@@ -291,12 +299,25 @@ Matrix linearTransformMatrix(Matrix& inputMatrix, Matrix& transformationMatrix){
 		std::vector<std::string> outputStringVector; 
 		for(int i =0; i < outputColumnVector.size(); i++){
 			outputStringVector.push_back(outputColumnVector[i].getCoefficients(8));
+
+
 		}
 
-		//
-		outputMatrixData.push_back(outputStringVector); 
+		
+		outputMatrixData.push_back(outputStringVector);
 		
 	}
-	return Matrix(outputMatrixData); 
+	
+	// the data needs to be transposed before being appended 
+	std::vector<std::vector<std::string>> outputMatrixDataTransposed(inputMatrix.getCols(), std::vector<std::string>(inputMatrix.getRows(), "")); 
+
+	for(int row = 0; row < 4; row++)
+	{
+		for(int col = 0; col < 4; col++)
+		{
+			outputMatrixDataTransposed[row][col] = outputMatrixData[col][row]; 
+		}
+	}
+	return Matrix(outputMatrixDataTransposed); 
 }
 

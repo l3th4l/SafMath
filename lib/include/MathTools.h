@@ -88,8 +88,8 @@ private:
     std::vector<std::vector<std::string>> m_data;
 
 public:
-    Matrix(int rows, int cols) : m_rows(rows), m_cols(cols) {
-        m_data.resize(rows, std::vector<std::string>(cols, 0));
+    Matrix(int rows, int cols) : m_rows(rows), m_cols(cols) {    
+	    m_data.resize(rows, std::vector<std::string>(cols)); 
     }
 
     // New Constructor: Create a matrix from existing 2D vector
@@ -113,6 +113,6 @@ Matrix shiftRow(const Matrix& mat, int rowIndex, int shiftAmount);
 Matrix shiftRows(const Matrix& mat, std::vector<int> shiftAmounts);
 //Matrix multiplyMatrices(const Matrix& mat1, const Matrix& mat2);
 BinaryPolynomial affineTransform(const BinaryPolynomial& poly);
-Matrix linearTransformMatrix(Matrix& inputMatrix, Matrix& transformationMatrix);
+Matrix linearTransformMatrix(Matrix& inputMatrix, Matrix& transformationMatrix, BinaryPolynomial& modulo);
 
 #endif // MATHTOOLS_H

@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <algorithm>
 
-BinaryPolynomial SBoxTransform(BinaryPolynomial AESPolynomial, BinaryPolynomial byte); 
+BinaryPolynomial SBoxTransform(BinaryPolynomial AESPolynomial, BinaryPolynomial byte);
+Matrix keyScheduleStep(Matrix& key, BinaryPolynomial& AESPolynomial, BinaryPolynomial& RC);
+int RoundCoeffecient(int i); 
 
 #endif
