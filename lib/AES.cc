@@ -6,6 +6,7 @@
 #include <bitset>
 #include <iostream>
 #include <iterator>
+#include <ostream>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -40,13 +41,17 @@ public:
     // Simply returns the data it was initialized with
     Matrix GetOutput() override {
         //return staticData;
+	//
+	    std::cout << "Round 1 Input :" << std::endl; 
 
 	std::vector<std::vector<std::string>> intermediateOutputData(staticData.getRows(), std::vector<std::string>(staticData.getCols(), "0")); 
 	
 	for(int i = 0; i < staticData.getRows(); i++){
 		for(int j = 0; j < staticData.getCols(); j++){
 			intermediateOutputData[i][j] = (BinaryPolynomial(staticKey.getData()[i][j]) + BinaryPolynomial(staticData.getData()[i][j])).getCoefficients(8);
+			std::cout << binaryToHexString(intermediateOutputData[i][j])<< " ";
 		}
+		std::cout << std::endl; 
 	}
 
 	
@@ -62,6 +67,8 @@ public:
 	   int roundCoeffecient = RoundCoeffecient(0);
 	   std::string RCString = std::bitset<8>(roundCoeffecient).to_string();
 	   BinaryPolynomial RCPolynomial = BinaryPolynomial(RCString);
+
+
 
 	   return keyScheduleStep(staticKey, AESPolynomial, RCPolynomial);
 
@@ -79,10 +86,12 @@ private:
     BinaryPolynomial AESPolynomial = BinaryPolynomial("100011011");
     int round; 
     Matrix roundKey = Matrix(4, 4);
+    bool disableMixColumn; 
 
 public:
     // Constructor to link this layer to the previous one
-    AESLayer(Layer* previous) {
+    AESLayer(Layer* previous, bool _disableMixColumn = false) {
+	this->disableMixColumn = _disableMixColumn; 
         this->inputLayer = previous;
 	//this->round = inputLayer->GetRound();
 	round = inputLayer->GetRound(); 
@@ -91,6 +100,7 @@ public:
     }
 
     int GetRound() override{
+	    std::cout << " round : " << round << std::endl; 
 	    return round;
     }
 
@@ -108,23 +118,36 @@ public:
         Matrix inputMatrix = inputLayer->GetOutput();
         std::vector<std::vector<std::string>> outputData = inputMatrix.getData();
 
+	std::cout << "Round [" << round << "] " << std::endl; 
+
         // 2. S-box logic
+	std::cout << "After Sub Bytes : " << std::endl; 
         for(int i = 0; i < 4; i++) {
             for(int j = 0; j < 4; j++) {
-		std::cout<< "at " << i << " , " << j << std::endl;
+		//std::cout<< "at " << i << " , " << j << std::endl;
                 BinaryPolynomial byte(inputMatrix.getData()[i][j]);
 
                 outputData[i][j] = SBoxTransform(AESPolynomial, byte).getCoefficients(8);
-
 		std::reverse(outputData[i][j].begin(), outputData[i][j].end());
-		std::cout << "resulting S-box value: " << outputData[i][j] << std::endl;
+
+		std::cout << binaryToHexString(outputData[i][j]) << " ";
 
             }
+	    std::cout << std::endl; 
         }
 
 	// 3. Shift Rows 
 	Matrix outputMatrix =  Matrix(outputData);
-	outputMatrix = shiftRows(outputMatrix, {0, 1, 2, 3, 4});
+	outputMatrix = shiftRows(outputMatrix, {0, -1, -2, -3, -4});
+
+	std::cout << "After Shift Rows : " << std::endl; 
+  
+        for(int i = 0; i < 4; i++) {
+            for(int j = 0; j < 4; j++) {
+		std::cout << binaryToHexString(outputMatrix.getData()[i][j]) << " ";
+            }
+	    std::cout << std::endl; 
+        }
 
 	 //4. Mix Columns 
 	std::vector<std::vector<std::string>> transformationMatrixData = 
@@ -139,18 +162,46 @@ public:
 
 	Matrix transformationMatrix = Matrix(transformationMatrixData);
 	
+	if(!disableMixColumn)
+	{
 	// Remember that the linear transformation is done in GF(2^8)/AES 
-	outputMatrix = linearTransformMatrix(outputMatrix, transformationMatrix, AESPolynomial);
+		outputMatrix = linearTransformMatrix(outputMatrix, transformationMatrix, AESPolynomial);
+	}
+
+	std::cout << "After Mix Columns : " << std::endl; 
+
+        for(int i = 0; i < 4; i++) {
+            for(int j = 0; j < 4; j++) {
+		std::cout << binaryToHexString(outputMatrix.getData()[i][j]) << " ";
+            }
+	    std::cout << std::endl; 
+        }
 
 	//5. Key Addition Layer 
 	//TODO Implement this. Make sure to transpose the key matrix
+	//
+	std::cout << "Round " << round << " key : " << std::endl; 
+	for(int i = 0; i < roundKey.getRows(); i ++)
+	{
+		for(int j = 0; j < roundKey.getCols(); j++)
+		{
+			std::cout << binaryToHexString(roundKey.getData()[i][j]) << " "; 
+		}
+
+		std::cout << std::endl; 
+	}
 	
 	std::vector<std::vector<std::string>> intermediateOutputData(outputMatrix.getRows(), std::vector<std::string>(outputMatrix.getCols(), "0")); 
-	
+
+	std::cout << "Output " << std::endl;
 	for(int i = 0; i < outputMatrix.getRows(); i++){
 		for(int j = 0; j < outputMatrix.getCols(); j++){
 			intermediateOutputData[i][j] = (BinaryPolynomial(roundKey.getData()[i][j]) + BinaryPolynomial(outputMatrix.getData()[i][j])).getCoefficients(8);
+			std::cout << binaryToHexString(intermediateOutputData[i][j])<< " ";
+
 		}
+		std::cout << std::endl; 
+
 	}
 
 	outputMatrix = Matrix(intermediateOutputData);
@@ -177,33 +228,91 @@ BinaryPolynomial SBoxTransform(BinaryPolynomial AESPolynomial, BinaryPolynomial 
 };
 
 Matrix keyScheduleStep(Matrix& key, BinaryPolynomial& AESPolynomial, BinaryPolynomial& RC){
-	std::vector<std::vector<std::string>> keyData = key.getData(); 
+	std::vector<std::vector<std::string>> keyDataTemp = key.getData();
+	std::vector<std::vector<std::string>> keyData = key.getData();
+	std::vector<std::vector<std::string>> keyDataOut = key.getData();
+	//transpose key data before processing
+	//NOTE : This is hardcoded to 4x4 key 
+	for(int i = 0; i < 4; i ++)
+	{
+		for(int j = 0; j < 4; j ++)
+		{
+			keyData[i][j] = keyDataTemp[j][i];
+		}
+	}
+
 	std::vector<std::string> W0 = keyData[0];
 
 	std::vector<std::string> Wn = keyData[keyData.size() -1];
-	std::vector<std::string> g = {Wn[1], Wn[2], Wn[3], Wn[0]};
 
-	for(int i=0; i<g.size(); i++){
-		g[i] = SBoxTransform(AESPolynomial, BinaryPolynomial(g[i])).getCoefficients(8);
+	std::cout << "Key Schedule " << std::endl; 
+	std::cout << "Temp W[3] : "; 
+
+	for(int n = 0; n < 4; n++){
+		std::cout << binaryToHexString(Wn[n]); 
 	}
 
-	g[0] = (BinaryPolynomial(g[0]) + RC).getCoefficients(8); 
+
+
+	std::vector<std::string> g = {Wn[1], Wn[2], Wn[3], Wn[0]};
+
+	std::cout << std::endl << "After Rotword: "; 
+
+	for(int n = 0; n < 4; n++){
+		std::cout << binaryToHexString(g[n]); 
+	}
+
+	std::cout << std::endl << "After Subword: "; 
+
+	for(int i=0; i<g.size(); i++){
+		BinaryPolynomial giPoly = BinaryPolynomial(g[i]);		
+		g[i] = SBoxTransform(AESPolynomial, giPoly).getCoefficients(8);
+		std::reverse(g[i].begin(), g[i].end());
+		std::cout << binaryToHexString(g[i]);
+	}
+
+	
+	std::cout << std::endl << "Rcon: " << binaryToHexString(RC.getCoefficients(8)) << std::endl; 
+	
+	std::cout << std::endl << "After XOR with Rcon WeWe : " << std::endl; 
+
+	g[0] = (BinaryPolynomial(g[0]) + RC).getCoefficients(8);
+
+	for(int n = 0; n < 4; n++){
+		std::cout << binaryToHexString(g[n]); 
+	}
+
+	std::cout << "XOR with temp(s) : " << std::endl; 
 
 	std::vector<std::vector<std::string>> outputKeyData(4, std::vector<std::string>(4, "00000000"));
 
 	for(int W = 0; W < keyData.size(); W++){
 		if(W == 0){
 			for(int i=0; i < outputKeyData[0].size(); i++){
+				std::cout << binaryToHexString(keyData[W][i]);
 				outputKeyData[W][i] = (BinaryPolynomial(g[i]) + BinaryPolynomial(keyData[W][i])).getCoefficients(8);
 			}
 		}else{
 			for(int i=0; i < outputKeyData[0].size(); i++){
-				outputKeyData[W][i] = (BinaryPolynomial(keyData[W-1][i]) + BinaryPolynomial(keyData[W][i])).getCoefficients(8);
+				std::cout << binaryToHexString(keyData[W][i]);
+				outputKeyData[W][i] = (BinaryPolynomial(outputKeyData[W-1][i]) + BinaryPolynomial(keyData[W][i])).getCoefficients(8);
 			}
+		}
+		std::cout << std::endl;
+	}
+
+	//transpose before returning 
+	
+	for(int i = 0; i < 4; i ++)
+	{
+		for(int j = 0; j < 4; j ++)
+		{
+			keyDataOut[i][j] = outputKeyData[j][i];
 		}
 	}
 
-	return Matrix(outputKeyData);
+	return Matrix(keyDataOut);
+	//return Matrix(outputKeyData);
 
 
 }
@@ -222,7 +331,7 @@ int RoundCoeffecient(int j){
 		return 1;
 	}
 
-	int previousRoundCoeffecient = RoundCoeffecient(i-1);	
+	int previousRoundCoeffecient = RoundCoeffecient(j-1);	
 
 	std::cout << previousRoundCoeffecient << std::endl;
 
@@ -241,20 +350,17 @@ int RoundCoeffecient(int j){
 int main() {
 
 	
-    
-    //
     //std::cout << "What is happening?" << std::endl;
-    //
+    
     std::string keyHex = "2B7E151628AED2A6ABF7158809CF4F3C";
     std::string binaryKeyString = hexStringToBinary(keyHex);
     Matrix keyMatrix = AESMatrixFromBinaryString(binaryKeyString); 
 
-
+    //std::string inputPlaintext = "3243F6A8885A308D313198A2E0370734";
     std::string inputPlaintext = "6BC1BEE22E409F96E93D7E117393172A";
-    //std::string inputPlaintext = "C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2";
     std::string inputBinaryString = hexStringToBinary(inputPlaintext);
     Matrix initialMatrix = AESMatrixFromBinaryString(inputBinaryString);
-
+    
     /*
     // 1. Prepare the 4x4 data (all 0s)
     std::vector<std::vector<std::string>> testData(4, std::vector<std::string>(4, "11000010"));
@@ -269,28 +375,42 @@ int main() {
     */
 
     // 4. Set up the layer chain
+    //
+    
     InputLayer* input = new InputLayer(initialMatrix, keyMatrix);
-    AESLayer* subBytes = new AESLayer(input);
+    AESLayer* x = new AESLayer(input);
+    x = new AESLayer(x);
+    x = new AESLayer(x);
+    x = new AESLayer(x);
+    x = new AESLayer(x);
+    x = new AESLayer(x);
+    x = new AESLayer(x);
+    x = new AESLayer(x);
+    x = new AESLayer(x);
+    x = new AESLayer(x, true);
+
 
     // 5. Execute and retrieve output
-    Matrix resultMatrix = subBytes->GetOutput();
+    Matrix resultMatrix = x->GetOutput();
     std::vector<std::vector<std::string>> resultData = resultMatrix.getData();
 
-    std::cout << "We're on it!"<< std::endl;
 
     // 6. Print the results (First row)
     std::cout << "SubBytes Output for first row:" << std::endl;
-    for(int j = 0; j < 4; j++) {
-        std::cout << "[" << resultData[0][j] << "] ";
+    for(int i = 0; i < 4; i++){
+    	for(int j = 0; j < 4; j++) {
+        	std::cout <<  binaryToHexString(resultData[j][i]);
+    	} 
     }
-    
+    std::cout << std::endl;
     // Clean up memory
-    delete subBytes;
+    delete x;
     delete input;
 
     return 0; 
     
-    /*
+    
+   /* 
 	BinaryPolynomial testAESPoly = BinaryPolynomial("100011011");
 
     std::cout << "========================================\n";
@@ -317,18 +437,18 @@ int main() {
     
     // NIST Input column: D4, BF, 5D, 30 (filled out as a full matrix for your system)
     std::vector<std::vector<std::string>> testInputHex1 = {
-        {"D4", "00", "00", "00"},
-        {"BF", "00", "00", "00"},
-        {"5D", "00", "00", "00"},
-        {"30", "00", "00", "00"}
+        {"D4", "E0", "00", "00"},
+        {"BF", "B4", "00", "00"},
+        {"5D", "52", "00", "00"},
+        {"30", "AE", "00", "00"}
     };
     
     // Expected Output column: 04, 66, 81, E5
     std::vector<std::vector<std::string>> expectedOutputHex1 = {
-        {"04", "00", "00", "00"},
-        {"66", "00", "00", "00"},
-        {"81", "00", "00", "00"},
-        {"E5", "00", "00", "00"}
+        {"04", "E0", "00", "00"},
+        {"66", "CB", "00", "00"},
+        {"81", "19", "00", "00"},
+        {"E5", "9A", "00", "00"}
     };
 
     Matrix inputMatrix1 = Matrix(hex2DArrayToBinary2DArray(testInputHex1));
