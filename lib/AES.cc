@@ -393,7 +393,7 @@ public:
         for(int i = 0; i < 4; i++) {
             for(int j = 0; j < 4; j++) {
 		//std::cout<< "at " << i << " , " << j << std::endl;
-                BinaryPolynomial byte(inputMatrix.getData()[i][j]);
+                BinaryPolynomial byte(outputMatrix.getData()[i][j]);
 
                 outputData[i][j] = SBoxTransform(AESPolynomial, byte, true).getCoefficients(8);
 		std::reverse(outputData[i][j].begin(), outputData[i][j].end());
@@ -412,8 +412,21 @@ public:
 
 BinaryPolynomial SBoxTransform(BinaryPolynomial AESPolynomial, BinaryPolynomial byte, bool inverse){
 
+		BinaryPolynomial tempByte = byte;
+
+		if(inverse){
+			std::string tbString = tempByte.getCoefficients(8);
+			std::reverse(tbString.begin(), tbString.end());
+			tempByte = affineTransform(tempByte, inverse);
+			tbString = tempByte.getCoefficients(8);
+			//std::reverse(tbString.begin(), tbString.end());
+			tempByte = BinaryPolynomial(tbString);
+
+			//std::cout << "Inv affine step : " << tempByte.getCoefficients(8) << std::endl;
+		}
+
 	 	// --- Inverse in GF(2^8)
-                std::vector<BinaryPolynomial> EGCDResult = extendedGCD(AESPolynomial, byte);
+                std::vector<BinaryPolynomial> EGCDResult = extendedGCD(AESPolynomial, tempByte);
 
                 // --- Affine Transformation
                 std::string invCoeffs = EGCDResult[2].getCoefficients(8);
@@ -421,8 +434,14 @@ BinaryPolynomial SBoxTransform(BinaryPolynomial AESPolynomial, BinaryPolynomial 
 
                 BinaryPolynomial AESInv = BinaryPolynomial(invCoeffs);
 
-                // Add to the data matrix 
-                return affineTransform(AESInv, inverse);
+		if(inverse){
+			//std::cout << "GF Inv step : " << invCoeffs << std::endl;
+			return AESInv; 
+		}
+		else {
+                	// Add to the data matrix 
+                	return affineTransform(AESInv, inverse);
+		}
 
 
 };
@@ -576,6 +595,47 @@ int main() {
 
     // 4. Set up the layer chain
     //
+    //
+    //
+
+    BinaryPolynomial _AESPolynomial = BinaryPolynomial("100011011");
+
+    BinaryPolynomial SBOXTest = BinaryPolynomial("00100101");
+    std::string SBR = SBoxTransform(_AESPolynomial, SBOXTest, true).getCoefficients(8); 
+    std::reverse(SBR.begin(), SBR.end());
+    std::cout << "SBOX test " << SBR << std::endl;
+    std::cout << "SBOX HEX " << binaryToHexString(SBR) << std::endl;
+
+    //Check that the inverse affine transformation works 
+    //
+
+    std::string aff = affineTransform(SBOXTest).getCoefficients(8);
+    std::reverse(aff.begin(), aff.end());
+    BinaryPolynomial invaff = affineTransform(BinaryPolynomial(aff), true);
+    
+
+    std::cout << "Inverse affine test " << invaff.getCoefficients(8) << std::endl;
+
+    
+    // --- Inverse in GF(2^8)
+
+    std::vector<BinaryPolynomial> EGCDResult = extendedGCD(_AESPolynomial, SBOXTest);
+
+    // --- Affine Transformation
+        
+    std::string invCoeffs = EGCDResult[2].getCoefficients(8);
+
+    
+    EGCDResult = extendedGCD(_AESPolynomial, EGCDResult[2]);
+
+
+    std::cout << "Inverse GF test " << EGCDResult[2].getCoefficients(8) << std::endl;
+
+
+
+
+
+
     
     InputLayer* input = new InputLayer(initialMatrix, keyMatrix);
     AESLayer* x = new AESLayer(input);
@@ -612,112 +672,4 @@ int main() {
 
     return 0; 
     
-    
-   /* 
-	BinaryPolynomial testAESPoly = BinaryPolynomial("100011011");
-
-    std::cout << "========================================\n";
-    std::cout << "      RUNNING MIXCOLUMNS UNIT TESTS     \n";
-    std::cout << "========================================\n\n";
-
-    // 1. Setup the Fixed AES Transformation Matrix
-    std::vector<std::vector<std::string>> transformationMatrixData = { 
-        {"02", "03", "01", "01"}, 
-        {"01", "02", "03", "01"}, 
-        {"01", "01", "02", "03"}, 
-        {"03", "01", "01", "02"}, 
-    };
-    
-    // Convert hex identifiers to binary string representation used by your library
-    transformationMatrixData = hex2DArrayToBinary2DArray(transformationMatrixData);
-    Matrix transformationMatrix = Matrix(transformationMatrixData);
-
-
-    // ---------------------------------------------------------
-    // TEST CASE 1: Standard NIST Test Vector (From FIPS-197 Appendix B)
-    // ---------------------------------------------------------
-    std::cout << "--- Test Case 1: NIST Standard Column ---\n";
-    
-    // NIST Input column: D4, BF, 5D, 30 (filled out as a full matrix for your system)
-    std::vector<std::vector<std::string>> testInputHex1 = {
-        {"D4", "E0", "00", "00"},
-        {"BF", "B4", "00", "00"},
-        {"5D", "52", "00", "00"},
-        {"30", "AE", "00", "00"}
-    };
-    
-    // Expected Output column: 04, 66, 81, E5
-    std::vector<std::vector<std::string>> expectedOutputHex1 = {
-        {"04", "E0", "00", "00"},
-        {"66", "CB", "00", "00"},
-        {"81", "19", "00", "00"},
-        {"E5", "9A", "00", "00"}
-    };
-
-    Matrix inputMatrix1 = Matrix(hex2DArrayToBinary2DArray(testInputHex1));
-    Matrix expectedMatrix1 = Matrix(hex2DArrayToBinary2DArray(expectedOutputHex1));
-
-    // Execute transformation
-    Matrix resultMatrix1 = linearTransformMatrix(inputMatrix1, transformationMatrix, testAESPoly);
-
-    // Verify first column
-    bool pass1 = true;
-    std::cout << "Index | Expected (Bin) | Result (Bin) | Status\n";
-    std::cout << "----------------------------------------------\n";
-    for(int i = 0; i < 4; i++) {
-        std::string expected = expectedMatrix1.getData()[i][0];
-        std::string result = resultMatrix1.getData()[i][0];
-        bool match = (expected == result);
-        if(!match) pass1 = false;
-        
-        std::cout << " [" << i << ",0] | " << expected << " | " << result 
-                  << " | " << (match ? "PASS" : "FAIL") << "\n";
-    }
-    std::cout << "Conclusion: Test Case 1 " << (pass1 ? "PASSED 🎉" : "FAILED ❌") << "\n\n";
-
-
-    // ---------------------------------------------------------
-    // TEST CASE 2: Simple Sequential Test Vector
-    // ---------------------------------------------------------
-    std::cout << "--- Test Case 2: Sequential Vector ---\n";
-
-    // Input Column: 01, 02, 03, 04
-    std::vector<std::vector<std::string>> testInputHex2 = {
-        {"49", "00", "00", "00"},
-        {"DB", "00", "00", "00"},
-        {"87", "00", "00", "00"},
-        {"3B", "00", "00", "00"}
-    };
-
-    // Expected Output Column: 04, 01, 02, 09
-    std::vector<std::vector<std::string>> expectedOutputHex2 = {
-        {"58", "00", "00", "00"},
-        {"4D", "00", "00", "00"},
-        {"CA", "00", "00", "00"},
-        {"F1", "00", "00", "00"}
-    };
-
-    Matrix inputMatrix2 = Matrix(hex2DArrayToBinary2DArray(testInputHex2));
-    Matrix expectedMatrix2 = Matrix(hex2DArrayToBinary2DArray(expectedOutputHex2));
-
-    // Execute transformation
-    Matrix resultMatrix2 = linearTransformMatrix(inputMatrix2, transformationMatrix, testAESPoly);
-
-    // Verify first column
-    bool pass2 = true;
-    std::cout << "Index | Expected (Bin) | Result (Bin) | Status\n";
-    std::cout << "----------------------------------------------\n";
-    for(int i = 0; i < 4; i++) {
-        std::string expected = expectedMatrix2.getData()[i][0];
-        std::string result = resultMatrix2.getData()[i][0];
-        bool match = (expected == result);
-        if(!match) pass2 = false;
-        
-        std::cout << " [" << i << ",0] | " << expected << " | " << result 
-                  << " | " << (match ? "PASS" : "FAIL") << "\n";
-    }
-    std::cout << "Conclusion: Test Case 2 " << (pass2 ? "PASSED 🎉" : "FAILED ❌") << "\n\n";
-
-    return 0;
-    */
-}
+   }
