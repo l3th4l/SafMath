@@ -238,10 +238,15 @@ Matrix shiftRows(const Matrix& mat, std::vector<int> shiftAmounts){
 	return shiftedMatrix;
 }
 
-BinaryPolynomial affineTransform(const BinaryPolynomial& poly) {
+BinaryPolynomial affineTransform(const BinaryPolynomial& poly, const bool inverse) {
     BinaryPolynomial constant("11000110"); // additive constant for the affine transformation
 
-    std::string affineCoeffs = "10001111"; 
+    std::string affineCoeffs = "10001111";
+
+    if(inverse){
+	    affineCoeffs = "01010010";
+	    constant = BinaryPolynomial("00000101");
+    }
 
     std::string intermediateCoeffs = "00000000"; // Initialize with zeros
 
