@@ -404,6 +404,34 @@ public:
 	    std::cout << std::endl; 
         }
 
+	outputMatrix = Matrix(outputData);
+	
+	//Key Addition 
+		    std::cout << "Round "<< GetRound() -1 <<" (Decrypt) Key: " << std::endl;
+	    //
+
+	for(int i = 0; i < 4; i++) {
+            for(int j = 0; j < 4; j++) {
+		std::cout << binaryToHexString(allKeys[GetRound()].getData()[i][j]) << " ";
+            }
+	    std::cout << std::endl; 
+        }
+
+	std::vector<std::vector<std::string>> intermediateOutputData(outputMatrix.getRows(), std::vector<std::string>(outputMatrix.getCols(), "0")); 
+	
+	std::cout << "Output for round " << GetRound() << std::endl; 
+
+	for(int i = 0; i < outputMatrix.getRows(); i++){
+		for(int j = 0; j < outputMatrix.getCols(); j++){
+			intermediateOutputData[i][j] = (BinaryPolynomial(allKeys[GetRound()].getData()[i][j]) + BinaryPolynomial(outputMatrix.getData()[i][j])).getCoefficients(8);
+			std::cout << binaryToHexString(intermediateOutputData[i][j])<< " ";
+		}
+		std::cout << std::endl; 
+	}
+	
+	outputMatrix = Matrix(intermediateOutputData); 
+ 
+
 	return outputMatrix; 
 
     }
@@ -655,6 +683,15 @@ int main() {
 
     DecryptionInputLayer* deInput = new DecryptionInputLayer(resultMatrix, keyMatrix); 
     AESDecryptionLayer* y = new AESDecryptionLayer(deInput, true);
+    y = new AESDecryptionLayer(y);
+    y = new AESDecryptionLayer(y);
+    y = new AESDecryptionLayer(y);
+    y = new AESDecryptionLayer(y);
+    y = new AESDecryptionLayer(y);
+    y = new AESDecryptionLayer(y);
+    y = new AESDecryptionLayer(y);
+    y = new AESDecryptionLayer(y);
+    y = new AESDecryptionLayer(y);
     Matrix plainTextResultMatrix = y->GetOutput(); 
 
 
