@@ -12,101 +12,54 @@
 #include <algorithm>
 
 
-class Layer {
-public:
-    virtual ~Layer() = default;
-    
-    // Every layer must implement this to process data from the previous layer
-    virtual Matrix GetOutput() = 0;
-    virtual Matrix GetKey() = 0;
-    virtual std::vector<Matrix> GetAllKeys() = 0;
-    virtual int GetRound() = 0;
+// Encryption Input 
+InputLayer::InputLayer(Matrix initialMatrix, Matrix initialKey) : staticData(initialMatrix) , staticKey(initialKey){}
 
-protected:
-    Layer* inputLayer = nullptr; 
-};
+Matrix InputLayer::GetOutput() {
 
-
-class InputLayer : public Layer {
-private:
-
-    BinaryPolynomial AESPolynomial = BinaryPolynomial("100011011");
-
-    Matrix staticData;
-    Matrix staticKey; 
-
-public:
-    // Initialize with the starting matrix (e.g., the plaintext)
-    InputLayer(Matrix initialMatrix, Matrix initialKey) : staticData(initialMatrix) , staticKey(initialKey){}
-
-    // Simply returns the data it was initialized with
-    Matrix GetOutput() override {
-        //return staticData;
-	//
-	    //std::cout << "Round 1 Input :" << std::endl; 
-
-	std::vector<std::vector<std::string>> intermediateOutputData(staticData.getRows(), std::vector<std::string>(staticData.getCols(), "0")); 
-	
-	for(int i = 0; i < staticData.getRows(); i++){
-		for(int j = 0; j < staticData.getCols(); j++){
-			intermediateOutputData[i][j] = (BinaryPolynomial(staticKey.getData()[i][j]) + BinaryPolynomial(staticData.getData()[i][j])).getCoefficients(8);
-			//std::cout << binaryToHexString(intermediateOutputData[i][j])<< " ";
-		}
-		//std::cout << std::endl; 
+    std::vector<std::vector<std::string>> intermediateOutputData(staticData.getRows(), std::vector<std::string>(staticData.getCols(), "0")); 
+    for(int i = 0; i < staticData.getRows(); i++){
+	for(int j = 0; j < staticData.getCols(); j++){
+	    intermediateOutputData[i][j] = (BinaryPolynomial(staticKey.getData()[i][j]) + BinaryPolynomial(staticData.getData()[i][j])).getCoefficients(8);
+		//std::cout << binaryToHexString(intermediateOutputData[i][j])<< " ";
 	}
-
-	
-	Matrix outputMatrix = Matrix(intermediateOutputData);
-
-        return outputMatrix; 
-
-
+	    //std::cout << std::endl; 
     }
 
-    Matrix GetKey() override {
-	    //return staticKey;
-	   int roundCoeffecient = RoundCoeffecient(0);
-	   std::string RCString = std::bitset<8>(roundCoeffecient).to_string();
-	   BinaryPolynomial RCPolynomial = BinaryPolynomial(RCString);
+    Matrix outputMatrix = Matrix(intermediateOutputData);
+    return outputMatrix; 
 
+}
 
+Matrix InputLayer::GetKey(){
+    
+    int roundCoeffecient = RoundCoeffecient(0);
+    std::string RCString = std::bitset<8>(roundCoeffecient).to_string();
+    BinaryPolynomial RCPolynomial = BinaryPolynomial(RCString);
 
-	   return keyScheduleStep(staticKey, AESPolynomial, RCPolynomial);
+    return keyScheduleStep(staticKey, AESPolynomial, RCPolynomial);	     
+}
 
-	     
-    }
+int InputLayer::GetRound(){
+    return 0;
+}
 
-    int GetRound() override {
-	    return 0;
-    }
+std::vector<Matrix> InputLayer::GetAllKeys(){
+    // Do nothing hehe 
+}
 
-    std::vector<Matrix> GetAllKeys() override{
-	    // Do nothing hehe 
-    };
-};
+// Decryption Input 
 
-// Decryption Input
-class DecryptionInputLayer : public Layer {
-private:
-
-    BinaryPolynomial AESPolynomial = BinaryPolynomial("100011011");
-
-    Matrix staticData;
-    Matrix staticKey; 
-
-    std::vector<Matrix> allKeys; 
-
-public:
-    // Initialize with the starting matrix (e.g., the plaintext)
-    DecryptionInputLayer(Matrix initialMatrix, Matrix initialKey): staticData(initialMatrix), staticKey(initialKey){
+// Initialize with the starting matrix (e.g., the plaintext)
+DecryptionInputLayer::DecryptionInputLayer(Matrix initialMatrix, Matrix initialKey): staticData(initialMatrix), staticKey(initialKey){
 	    
-	    allKeys.push_back(staticKey);
+	allKeys.push_back(staticKey);
 
-	    int maxRounds = 10;
+	int maxRounds = 10;
 
-	    for(int r = 0; r < maxRounds; r++){
+	for(int r = 0; r < maxRounds; r++){
 
-		//calculate all keys starting from initial key 
+	//calculate all keys starting from initial key 
 		int roundCoeffecient = RoundCoeffecient(r);
 
 		//std::cout << "Round Coefficient " << r << " ";
@@ -121,15 +74,11 @@ public:
 		allKeys.push_back(tempRoundKey);
 
 		    
-	    }
-    };
+	}
+};
 
     // Simply returns the data it was initialized with
-    Matrix GetOutput() override {
-        //return staticData;
-	//
-	    //std::cout << "Round 1 (Decrypt) Key: " << std::endl;
-	    //
+Matrix DecryptionInputLayer::GetOutput() {
 
 	for(int i = 0; i < 4; i++) {
             for(int j = 0; j < 4; j++) {
@@ -148,68 +97,57 @@ public:
 		//std::cout << std::endl; 
 	}
 
-	
 	Matrix outputMatrix = Matrix(intermediateOutputData);
 
         return outputMatrix; 
 
 
-    }
+}
 
-    Matrix GetKey() override {
+Matrix DecryptionInputLayer::GetKey(){
 
-	   return allKeys[GetRound()];
+	return allKeys[GetRound()];
 	     
-    }
+}
 
-    std::vector<Matrix> GetAllKeys() override
-    {
-	    return allKeys;
-    }
+std::vector<Matrix> DecryptionInputLayer::GetAllKeys(){
+	return allKeys;
+}
 
-    int GetRound() override {
-	    return 10;
-    }
-};
+int DecryptionInputLayer::GetRound(){
+	return 10;
+}
 
+// AES Layer 
 
-class AESLayer : public Layer {
-private:
-    BinaryPolynomial AESPolynomial = BinaryPolynomial("100011011");
-    int round; 
-    Matrix roundKey = Matrix(4, 4);
-    bool disableMixColumn; 
-
-public:
-    // Constructor to link this layer to the previous one
-    AESLayer(Layer* previous, bool _disableMixColumn = false) {
+AESLayer::AESLayer(Layer* previous, bool _disableMixColumn) {
 	this->disableMixColumn = _disableMixColumn; 
         this->inputLayer = previous;
 	//this->round = inputLayer->GetRound();
 	round = inputLayer->GetRound(); 
 	round = round + 1; 
 	roundKey = inputLayer->GetKey(); 
-    }
+}
 
-    std::vector<Matrix> GetAllKeys() override{
+std::vector<Matrix> AESLayer::GetAllKeys(){
 	    // Also do nothing hehe 
-    };
+};
 
-    int GetRound() override{
+int AESLayer::GetRound(){
 	    //std::cout << " round : " << round << std::endl; 
-	    return round;
-    };
+	return round;
+};
 
-    Matrix GetKey() override{
-	   int roundCoeffecient = RoundCoeffecient(round);
-	   std::string RCString = std::bitset<8>(roundCoeffecient).to_string();
-	   BinaryPolynomial RCPolynomial = BinaryPolynomial(RCString);
+Matrix AESLayer::GetKey(){
+	int roundCoeffecient = RoundCoeffecient(round);
+	std::string RCString = std::bitset<8>(roundCoeffecient).to_string();
+	BinaryPolynomial RCPolynomial = BinaryPolynomial(RCString);
 
-	   return keyScheduleStep(roundKey, AESPolynomial, RCPolynomial);
+	return keyScheduleStep(roundKey, AESPolynomial, RCPolynomial);
 	   
-    }
+}
 
-    Matrix GetOutput() override {
+Matrix AESLayer::GetOutput(){
         // 1. Get the input values from the previous layer
         Matrix inputMatrix = inputLayer->GetOutput();
         std::vector<std::vector<std::string>> outputData = inputMatrix.getData();
@@ -303,21 +241,11 @@ public:
 	outputMatrix = Matrix(intermediateOutputData);
 
         return outputMatrix; 
-    }
-};
+}
 
-class AESDecryptionLayer : public Layer
-{
-private:
-    BinaryPolynomial AESPolynomial = BinaryPolynomial("100011011");
-    int round; 
-    std::vector<Matrix> allKeys;
-    Matrix roundKey = Matrix(4, 4);
-    bool disableMixColumn; 
 
-public:
-    // Constructor to link this layer to the previous one
-    AESDecryptionLayer(Layer* previous, bool _disableMixColumn = false) {
+// AES Decryption Layer 
+AESDecryptionLayer::AESDecryptionLayer(Layer* previous, bool _disableMixColumn) {
 	this->disableMixColumn = _disableMixColumn; 
         this->inputLayer = previous;
 	//this->round = inputLayer->GetRound();
@@ -327,19 +255,19 @@ public:
 	roundKey = allKeys[round]; 
     };
 
-    int GetRound() override{
+int AESDecryptionLayer::GetRound(){
 	    return round;
-    };
+};
 
-    Matrix GetKey() override{
+Matrix AESDecryptionLayer::GetKey() {
 	    // hehe
-    };
+};
     
-    std::vector<Matrix> GetAllKeys() override{
+std::vector<Matrix> AESDecryptionLayer::GetAllKeys(){
 	    return allKeys;
-    };
+};
 
-    Matrix GetOutput() override{
+Matrix AESDecryptionLayer::GetOutput(){
 
 	// 1. Get the input values from the previous layer
         Matrix inputMatrix = inputLayer->GetOutput();
@@ -434,9 +362,8 @@ public:
 
 	return outputMatrix; 
 
-    }
+}
 
-};
 
 BinaryPolynomial SBoxTransform(BinaryPolynomial AESPolynomial, BinaryPolynomial byte, bool inverse){
 
