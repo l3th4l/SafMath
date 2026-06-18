@@ -3,7 +3,9 @@
 #include "include/Utils.h"
 #include "include/MathTools.h"
 
+#include <charconv>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
 
@@ -110,3 +112,60 @@ Matrix AESMatrixFromBinaryString(const std::string& binaryString){
 	
 	return Matrix(dataMatrix);
 };
+
+std::vector<std::string> splitByDelimiter(const std::string& str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    for (char c : str) {
+        if (c == delimiter) {
+            if (!token.empty()) {
+                tokens.push_back(token);
+                //std::cout << "Token : " << token << "\n";
+                token.clear();
+            }
+        } else {
+            token += c;
+        }
+
+    //print token for debugging 
+    
+    }
+    if (!token.empty()) {
+        tokens.push_back(token);
+    }
+    return tokens;
+};
+
+std::vector<std::string> splitByChunks(const std::string& inputString, const int& chunkSize){    
+    
+    std::vector<std::string> outputChunks; 
+
+    for (size_t i = 0; i < inputString.size(); i += chunkSize){
+        std::string chunk = inputString.substr(i, chunkSize);
+
+	outputChunks.push_back(chunk);
+    }
+
+    return outputChunks;
+}
+
+std::string PKCS7Pad(const std::string& plainText, const int& byteLength){
+
+	std::string binaryInput = plainTextToBinaryString(plainText); 
+	int padLength = (byteLength * 8 - (binaryInput.size() % (byteLength * 8))) / 8;
+	
+	std::string padding = ""; 
+
+	std::stringstream ss; 
+	ss << "\\0x" << std::hex << padLength; 
+	std::string hexString = ss.str();
+
+	for(int i = 0; i < padLength; i ++){
+		padding += hexString; 
+	}
+
+	std::cout << padLength << std::endl; 
+
+	return (plainText + padding); 
+
+}

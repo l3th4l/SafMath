@@ -1,6 +1,6 @@
-#include "include/Utils.h"
-#include "include/NumberSystems.h"
-#include "include/XorTools.h"
+#include "lib/include/Utils.h"
+#include "lib/include/NumberSystems.h"
+#include "lib/include/XorTools.h"
 #include <iostream>
 
 int main(){
